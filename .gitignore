@@ -1,4 +1,5 @@
 # Folders
+01-Read-Data/Data/
 
 # Gio's files
 text_editor.code-workspace
@@ -39,3 +40,4 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+.Rproj.user
