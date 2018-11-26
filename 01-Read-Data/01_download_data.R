@@ -29,7 +29,7 @@ sites_CD <- td_sites %>%
 gs_download(from = gs_key("1m797EoMbtAvasqum-pB5ykVMeHsGWwcVvre8MbvE-xM"), 
             # Management DataStore (TD backend for mandata)
             ws = "DWM",
-            to = "Data/DWM Management.xlsx",
+            to = "Data/DWM Management.csv",
             overwrite = TRUE)
 
 

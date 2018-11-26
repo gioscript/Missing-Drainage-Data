@@ -144,3 +144,26 @@ weather_on_site_formated <-
   mutate(date = as.Date(date)) 
 
 
+
+# Read DWM management  ----------------------------------------------------
+
+dwm_mngt <-
+  read_csv("Data/DWM Management.csv") %>%
+  slice(-1) %>%
+  # rename columns
+  select(siteid = uniqueid, plotid = box_structure, 
+         tmsp = outlet_date, depth = outletdepth) %>%
+  # select CD sites only
+  filter(siteid %in% sites_CD$Site_ID) %>%
+  mutate(tmsp = parse_date_time(tmsp, "Ymd_HMS", truncated = 3),
+         depth = as.numeric(depth)) %>%
+  # remove entries with no depth data or no board changes (such as SERF_IA 2013-2014)
+  filter(!is.na(depth), !is.na(tmsp)) %>%
+  # remove board data at STJOHNS for FD plot
+  filter(!(siteid == "STJOHNS" & plotid == "WS")) %>%
+  # remove board data at AUGLA when West plot was at FD mode
+  filter(!(siteid == "AUGLA" & plotid == "West" & tmsp < ymd(20120601))) %>%
+  # expend DWM treatment for each plot (some sites list >1 plot in plotid)
+  separate(plotid, into = c("plot1", "plot2"), sep = ',\ ?') %>%
+  gather(key = plot, value = plotid, plot1:plot2, na.rm = TRUE) %>%
+  select(siteid, plotid, tmsp, depth)
