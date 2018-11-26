@@ -22,3 +22,11 @@ tile_flow_with_dwm %>%
   write_csv(path = paste0(dirname(getwd()), "/05-Gap-Filling/Data/tile_flow_with_rain_STEP1.csv"))
 
 
+# Save dwm management data for Regression Model (STEP 5) ------------------
+
+dwm_mngt %T>%
+  # as an output in the Step 1
+  write_csv(path = "Output/Data/dwm_mngt_STEP1.csv") %>%
+  # as an input for the Step 5
+  write_csv(path = paste0(dirname(getwd()), "/05-Gap-Filling/Data/dwm_mngt_STEP1.csv"))
+
