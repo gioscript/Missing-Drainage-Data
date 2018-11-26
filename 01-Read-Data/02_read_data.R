@@ -56,6 +56,7 @@ tile_flow_formated <-
          flow = as.double(flow))
 
 
+
 # Read plot DWM treatment -------------------------------------------------
 
 plot_DWM_trt <- read_excel("Data/TD Site Keys.xlsx",
@@ -79,17 +80,67 @@ tile_flow_with_dwm <-
 
 
 
-# Save tile flow data for Replicate Regression ----------------------------
+# Read on-site weather data -----------------------------------------------
 
-tile_flow_with_dwm %>%
-  # select sites with more than 2 plots
-  group_by(siteid) %>%
-  mutate(n = length(unique(plotid))) %>%
-  filter(n > 2) %>%
-  # make sure that there are replicated treatments
-  mutate(n = length(unique(dwm))) %>%
-  filter(n > 1) %>%
-  select(siteid, plotid, dwm, year, date, flow) %>%
-  write_csv(path = paste0(dirname(getwd()), "/03-Rep-Regression/Data/tile_flow_with_reps.csv"))
+weather_on_site_unformated <- vector(mode = "list", length = length(list_of_Weather_sheets_to_download))
+
+for (i in seq_along(list_of_Weather_sheets_to_download)) {
+  # exclude sites that has multiple on-site weather stations
+  if (list_of_Weather_sheets_to_download[i]  %in% c("SERF_IA Weather")) {
+    print(paste(list_of_Weather_sheets_to_download[i], "needs to be processed individually"))
+  } else {
+    print(list_of_Weather_sheets_to_download[i])
+    # read column headings
+    weather_sheet_column_heading = read_excel(paste0("Data/On-Site-Weather/", list_of_Weather_sheets_to_download[i] , ".xlsx"),
+                                              sheet = "DAILY", n_max = 2) %>% names()
+    # read data and add names to columns
+    weather_on_site_unformated[[i]] = read_excel(paste0("Data/On-Site-Weather/", list_of_Weather_sheets_to_download[i] , ".xlsx"),
+                                                 sheet = "DAILY", skip = 2, 
+                                                 col_names = weather_sheet_column_heading,
+                                                 col_types = c("date", rep("numeric", length(weather_sheet_column_heading) - 1)))
+    # add column with site ID
+    weather_on_site_unformated[[i]]$siteid = word(list_of_Weather_sheets_to_download[i])
+  }
+}
+
+# read data from sites with multiple weather stations
+
+# SERF_IA >>>
+
+# Manual weather station 
+weather_on_site_unformated_SERF_IA_Manual <-
+  read_excel("Data/On-Site-Weather/SERF_IA Weather.xlsx",
+             sheet = "MANUAL", skip = 2,
+             col_names = c("Date", "Precipitation"))
+
+# LevelRain weather station 
+weather_on_site_unformated_SERF_IA_LevelRain <-
+  read_excel("Data/On-Site-Weather/SERF_IA Weather.xlsx",
+             sheet = "DAILY LevelRain", skip = 2,
+             col_names = c("Date", "Precipitation"))
+
+# ISU SM Network weather station 
+weather_on_site_unformated_SERF_IA_ISUnetwork <-
+  read_excel("Data/On-Site-Weather/SERF_IA Weather.xlsx",
+             sheet = "DAILY ISUnetwork", skip = 2,
+             col_names = c("Date", "Precipitation"))
+
+# overlaping precipitation records were chosen according to Kristina Craft's recommendation (email from 2017-04-07)
+weather_on_site_unformated_SERF_IA <-
+  weather_on_site_unformated_SERF_IA_Manual %>%
+  filter(year(Date) < 2012) %>%
+  bind_rows(weather_on_site_unformated_SERF_IA_LevelRain %>%
+              filter(year(Date) %in% c(2012, 2013))) %>%
+  bind_rows(weather_on_site_unformated_SERF_IA_ISUnetwork %>%
+              filter(year(Date) > 2013)) %>%
+  mutate(siteid = "SERF_IA")
+
+# combine on-site weather data for all sites
+weather_on_site_formated <-
+  weather_on_site_unformated %>%
+  bind_rows() %>%
+  bind_rows(weather_on_site_unformated_SERF_IA) %>%
+  select(siteid, date = Date, precip_on_site = Precipitation) %>%
+  mutate(date = as.Date(date)) 
 
 
