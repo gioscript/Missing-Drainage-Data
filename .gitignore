@@ -1,10 +1,10 @@
 # Folders
-01-Read-Data/Data/
-01-Read-Data/Output/
-03-Rep-Regression/Data/
-03-Rep-Regression/Output/
-05-Gap-Filling/Data/
-05-Gap-Filling/Output/
+01-Read-Data/Data/*
+01-Read-Data/Output/*
+03-Rep-Regression/Data/*
+03-Rep-Regression/Output/*
+05-Gap-Filling/Data/*
+05-Gap-Filling/Output/*
 
 # Gio's files
 text_editor.code-workspace
