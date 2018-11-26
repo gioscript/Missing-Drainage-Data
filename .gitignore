@@ -1,5 +1,10 @@
 # Folders
 01-Read-Data/Data/
+01-Read-Data/Output/
+03-Read-Data/Data/
+03-Read-Data/Output/
+05-Read-Data/Data/
+05-Read-Data/Output/
 
 # Gio's files
 text_editor.code-workspace
