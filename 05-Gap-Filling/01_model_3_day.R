@@ -823,6 +823,7 @@ read_csv("C:/Users/gio/OneDrive - Iowa State University/Projects/TD/Data/Data Re
   mutate(flow = ifelse(siteid %in% c("MUDS2", "STORY", "UBWC"), tile_flow_mm, flow_pred)) %>%
   # select variables to be used at 
   select(site = siteid, plot = plotid, trt = dwm, rep, year, season, date, flow) %>%
+  # remove data partaining to water year 2018
   filter(year < 2017) %>%
   write_csv(paste0("Output/Data/tile_flow_for_ANOVA_", Sys.Date(), ".csv"))
 
