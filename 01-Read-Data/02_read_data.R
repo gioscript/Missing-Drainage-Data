@@ -133,6 +133,10 @@ weather_on_site_unformated_SERF_IA <-
               filter(year(Date) %in% c(2012, 2013))) %>%
   bind_rows(weather_on_site_unformated_SERF_IA_ISUnetwork %>%
               filter(year(Date) > 2013)) %>%
+  # add missing Nov-Dec precip in 2011
+  bind_rows(weather_on_site_unformated_SERF_IA_ISUnetwork %>%
+              filter(year(Date) == 2011, month(Date) > 10)) %>%
+  arrange(Date) %>%
   mutate(siteid = "SERF_IA")
 
 # combine on-site weather data for all sites
