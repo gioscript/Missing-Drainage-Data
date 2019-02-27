@@ -777,25 +777,6 @@ tile_flow_new %>%
   
 
   
-  # mutate(flow_pred = ifelse(!is.na(flow), NA, flow_pred)) %>%
-  # filter(siteid == "TIDE") %>% filter(plotid %in% c("H3", "H4")) %>%
-  # 
-  # # mutate(water_year = ifelse(month(date)>9, year + 1, year)) %>%
-  # # group_by(dwm, year) %>% summarise(flow = sum(flow_pred, na.rm = T)) %>% spread(dwm, flow)
-  # 
-  # # filter(year %in% c(2007:2011)) %>%
-  # mutate(DATE = update(date, year = 2012)) %>%
-  # 
-  # ggplot(aes(x=DATE, group = plotid)) +
-  # geom_line(aes(y=flow_pred_board), col = "green") +
-  # geom_line(aes(y = flow, colour = plotid), col = "black") +
-  # geom_point(aes(y = flow_pred), size = 2, col = "blue") +
-  # geom_point(aes(y = flow, colour = plotid), size = 1.7) +
-  # # geom_col(aes(y=rain/10), fill = "skyblue", alpha = 0.5) +
-  # facet_grid(year ~ .) +
-  # theme_bw() #+
-  # coord_cartesian(xlim = ymd(20120101, 20120424))
-
 
 #  AUGLA   << seasonal pred is less stip and looks better {SEASONAL}
 #  CRAWF   << Good {SEASONAL}  
