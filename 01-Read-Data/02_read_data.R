@@ -53,7 +53,15 @@ tile_flow_formated <-
   select(siteid, plotid, year, date = Date, flow) %>%
   mutate(date = as_date(date),
          year = as.numeric(year),
-         flow = as.double(flow))
+         flow = as.double(flow)) %>%
+  # make HICKS_B complete years 
+  full_join(tibble(siteid = 'HICKS_B',
+                   date = seq(ymd(20060101), ymd(20171231), by = 'day'),
+                   BE = NA,
+                   BW = NA) %>%
+              gather(plotid, year, BE:BW) %>%
+              mutate(year = year(date)), 
+            by = c('siteid', 'plotid', 'year', 'date'))
 
 
 
@@ -86,7 +94,7 @@ weather_on_site_unformated <- vector(mode = "list", length = length(list_of_Weat
 
 for (i in seq_along(list_of_Weather_sheets_to_download)) {
   # exclude sites that has multiple on-site weather stations
-  if (list_of_Weather_sheets_to_download[i]  %in% c("SERF_IA Weather")) {
+  if (list_of_Weather_sheets_to_download[i]  %in% c("SERF_IA Weather", "HICKS_B Weather")) {
     print(paste(list_of_Weather_sheets_to_download[i], "needs to be processed individually"))
   } else {
     print(list_of_Weather_sheets_to_download[i])
@@ -122,30 +130,72 @@ weather_on_site_unformated_SERF_IA_LevelRain <-
 # ISU SM Network weather station 
 weather_on_site_unformated_SERF_IA_ISUnetwork <-
   read_excel("Data/On-Site-Weather/SERF_IA Weather.xlsx",
-             sheet = "DAILY ISUnetwork", skip = 2,
+             sheet = "DAILY ISUnetwork",
+             range = cell_limits(c(3, 1), c(NA, 2)),
              col_names = c("Date", "Precipitation"))
 
-# overlaping precipitation records were chosen according to Kristina Craft's recommendation (email from 2017-04-07)
+# overlaping precipitation records were chosen according to Kristina Craft's recommendation (email from 2017-04-07),
+# but it was later modified based on comparison of data made by Gio
 weather_on_site_unformated_SERF_IA <-
   weather_on_site_unformated_SERF_IA_Manual %>%
-  filter(year(Date) < 2012) %>%
-  bind_rows(weather_on_site_unformated_SERF_IA_LevelRain %>%
-              filter(year(Date) %in% c(2012, 2013))) %>%
+  # filter(year(Date) < 2012) %>%
+  filter(year(Date) < 2014) %>%
+  # bind_rows(weather_on_site_unformated_SERF_IA_LevelRain %>%
+  #             filter(year(Date) %in% c(2012, 2013))) %>%
   bind_rows(weather_on_site_unformated_SERF_IA_ISUnetwork %>%
               filter(year(Date) > 2013)) %>%
-  # add missing Nov-Dec precip in 2011
-  bind_rows(weather_on_site_unformated_SERF_IA_ISUnetwork %>%
-              filter(year(Date) == 2011, month(Date) > 10)) %>%
+  # add missing Nov-Feb precip in Mannual readings from ISUnetowk
+  mutate(Date = as.Date(Date)) %>%
+  full_join(tibble(Date = seq(ymd(20070101), ymd(20181231), by = 'day')), by = "Date") %>% 
+  left_join(weather_on_site_unformated_SERF_IA_ISUnetwork %>% 
+              mutate(Date = as.Date(Date)) %>%
+              rename(ISUnetwork = Precipitation), 
+            by = 'Date') %>%
   arrange(Date) %>%
-  mutate(siteid = "SERF_IA")
+  mutate(Precipitation = ifelse(is.na(Precipitation), ISUnetwork, Precipitation),
+         siteid = "SERF_IA", 
+         ISUnetwork = NULL)
+
+# HICKS_B >>>
+
+# On-site weather station 
+weather_on_site_unformated_HICKS_B <-
+  read_excel("Data/On-Site-Weather/HICKS_B Weather.xlsx",
+             sheet = "DAILY", na = "NA",
+             range = cell_limits(c(3, 1), c(NA, 2)),
+             col_names = c("Date", "Precipitation"))
+
+# off-site weather station at Tracy
+weather_off_site_unformated_HICKS_B <-
+  read_excel("Data/On-Site-Weather/HICKS_B Weather.xlsx",
+             sheet = "DAILY TracyStation",
+             range = cell_limits(c(3, 1), c(NA, 2)),
+             col_names = c("Date", "Precipitation"))
+
+# overlaping precipitation records were chosen to contain off-site data, because it was also used
+# by Andry when correcting tile flow data (at least 2016-2017)
+weather_on_site_unformated_HICKS_B <-
+  weather_on_site_unformated_HICKS_B %>%
+  mutate(Date = as.Date(Date)) %>%
+  full_join(weather_off_site_unformated_HICKS_B %>%
+              mutate(Date = as.Date(Date)) %>%
+              rename(OffSite = Precipitation), 
+            by = 'Date') %>%
+  arrange(Date) %>%
+  mutate(Precipitation = ifelse(is.na(Precipitation), OffSite, Precipitation),
+         siteid = "HICKS_B", 
+         OffSite = NULL)
+
 
 # combine on-site weather data for all sites
 weather_on_site_formated <-
   weather_on_site_unformated %>%
   bind_rows() %>%
-  bind_rows(weather_on_site_unformated_SERF_IA) %>%
-  select(siteid, date = Date, precip_on_site = Precipitation) %>%
-  mutate(date = as.Date(date)) 
+  mutate(Date = as.Date(Date)) %>%
+  bind_rows(weather_on_site_unformated_SERF_IA, 
+            weather_on_site_unformated_HICKS_B) %>%
+  select(siteid, date = Date, precip_on_site = Precipitation)
+  
 
 
 
@@ -159,7 +209,7 @@ dwm_mngt <-
          tmsp = outlet_date, depth = outletdepth) %>%
   # select CD sites only
   filter(siteid %in% sites_CD$Site_ID) %>%
-  mutate(tmsp = parse_date_time(tmsp, "Ymd_HMS", truncated = 3),
+  mutate(tmsp = parse_date_time(tmsp, c("Ymd_HMS", "mdY"), truncated = 3),
          depth = as.numeric(depth)) %>%
   # remove entries with no depth data or no board changes (such as SERF_IA 2013-2014)
   filter(!is.na(depth), !is.na(tmsp)) %>%
@@ -171,3 +221,4 @@ dwm_mngt <-
   separate(plotid, into = c("plot1", "plot2"), sep = ',\ ?') %>%
   gather(key = plot, value = plotid, plot1:plot2, na.rm = TRUE) %>%
   select(siteid, plotid, tmsp, depth)
+

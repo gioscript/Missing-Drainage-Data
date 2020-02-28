@@ -46,7 +46,7 @@ list_of_Google_sheets_to_download <-
   # select sites with CD treatment
   filter(word(sheet_title, -3) %in% sites_CD$Site_ID) %>%
   # remove CD sites that are not part of Gap-Filling Process
-  filter(!(word(sheet_title, -3) %in% c("BATH_A", "FAIRM", "WILKIN1", "WILKIN2"))) %>%
+  filter(!(word(sheet_title, -3) %in% c("BATH_A", "FAIRM", "WILKIN1", "WILKIN2", "MUDS3_OLD"))) %>%
   # there are different versions of tile flow sheets based on completeness of data
   # organize them accordingly for each site
   mutate(site = word(sheet_title, start = -3, end = -1),
@@ -89,7 +89,7 @@ list_of_Weather_sheets_to_download <-
   # select sites with CD treatment
   filter(word(sheet_title) %in% sites_CD$Site_ID) %>%
   # remove CD sites that are not part of Gap-Filling Process
-  filter(!(word(sheet_title) %in% c("BATH_A", "FAIRM", "WILKIN1", "WILKIN2"))) %>%
+  filter(!(word(sheet_title) %in% c("BATH_A", "FAIRM", "WILKIN1", "WILKIN2", "MUDS3_OLD"))) %>%
   pull() %>% sort()
 
 # save tile flow files on local drive

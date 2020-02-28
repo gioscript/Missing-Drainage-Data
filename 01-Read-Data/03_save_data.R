@@ -12,6 +12,7 @@ tile_flow_with_dwm %>%
   write_csv(path = paste0(dirname(getwd()), "/03-Rep-Regression/Data/tile_flow_with_reps.csv"))
 
 
+
 # Save tile flow and on-site precipitation data for Regression Model (STEP 5) ----
 
 tile_flow_with_dwm %>%
@@ -22,6 +23,7 @@ tile_flow_with_dwm %>%
   write_csv(path = paste0(dirname(getwd()), "/05-Gap-Filling/Data/tile_flow_with_rain_STEP1.csv"))
 
 
+
 # Save dwm management data for Regression Model (STEP 5) ------------------
 
 dwm_mngt %T>%
@@ -30,3 +32,14 @@ dwm_mngt %T>%
   # as an input for the Step 5
   write_csv(path = paste0(dirname(getwd()), "/05-Gap-Filling/Data/dwm_mngt_STEP1.csv"))
 
+
+
+# Save tile flow data for Gap-Filling Paper -----------------
+
+tile_flow_with_dwm %>%
+  # select site and plots used for paper 
+  filter(dwm == 'FD' & siteid %in% c('SERF_IA', 'DPAC')) %>%
+  # add precipitation data
+  left_join(weather_on_site_formated, by = c("siteid", "date")) %>%
+  # as an output in the same folder for Step 1
+  write_csv(path = "../../Synthesis Papers/Gio - Gap Filling/Analysis/Data/Input_Data/daily_tile_flow.csv") 
