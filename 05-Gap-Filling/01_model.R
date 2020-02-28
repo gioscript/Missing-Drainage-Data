@@ -23,8 +23,9 @@ rollmean.weighted = function(x, W1 = 0.25, W2 = 0.45, W3 = 0.30) {
 
 # Read data ---------------------------------------------------------------
 
-tile_flow <- read_csv("Data/tile_flow_with_rain_STEP1.csv")
-
+# data from STEP1 do not include predicted flow based on reps
+# tile_flow <- read_csv("Data/tile_flow_with_rain_STEP1.csv")
+tile_flow <- read_csv("Data/tile_flow_with_rain_STEP3.csv")
 
 
 # Prepaer data ------------------------------------------------------------
@@ -299,30 +300,51 @@ tile_flow_pred %>%
   filter(model_name == 'reg_model_weighted') %>%
   mutate(season = quarter(date),
          pred = ifelse(is.na(flow) & !is.na(flow_pred_trim), "predicted", NA )) %>%
+  # exclude winter months from HICKS_B & SERF_SD
+  mutate(pred = case_when(siteid == "SERF_SD" & month(date) %in% c(1:3) ~ NA_character_,
+                          siteid == "HICKS_B" & month(date) %in% c(1:3) ~ NA_character_,
+                          TRUE ~ pred)) %>%
   group_by(siteid, plotid, year) %>%
   summarise(total = n(), 
             total_pred = sum(!is.na(pred))) %>% 
   ungroup() %>%
   filter(total_pred > 0) %>%
-  arrange(desc(total_pred)) %>% 
-  head(20)
-# If number of predicted days per plot exceeds 150 in a calendar year, remove predictions
+  arrange(desc(total_pred)) ->
+  tile_flow_number_of_missing_days
+
+
+# If number of predicted days per plot exceeds 152 (5 months) in a calendar year, remove predictions
 # Based on the above code predictions for folowing site-plot-years should be removed
-    #     SiteID    PlotID   Year    Predicted    
-    # 1   DEFI_M    East     2010    365
-    # 2   DPAC      NE       2017    365
-    # 3   DPAC      NW       2017    365
-    # 4   HARDIN    North    2010    264
-    # 5   SERF_IA   S2       2010    245
-    # 6   SERF_IA   S2       2009    240
-    # 7   HENRY     East     2010    239
-    # 8   HENRY     West     2010    239
-    # 9   STJOHNS   WN       2009    181
-    # 10  STJOHNS   WS       2009    181
-    # 11  DPAC      NE       2006    166
-    # 12  DPAC      NW       2006    166
-    # 13  DPAC      SE       2006    166
-    # 14  DPAC      SW       2006    166
+tile_flow_number_of_missing_days %>%
+  filter(total_pred > 152) 
+    #   SiteID     PlotID    Year    Predicted    
+    #   DEFI_M       East    2010       365 
+    #   DPAC         NE      2006       166
+    #   DPAC         NW      2006       166 
+    #   DPAC         SE      2006       166
+    #   DPAC         SW      2006       166
+    #   DPAC         NE      2017       365
+    #   DPAC         NW      2017       365
+    #   HARDIN       North   2010       264 
+    #   HENRY        East    2010       239
+    #   HENRY        West    2010       239
+    #   HICKS_B      BE      2008       165
+    #   HICKS_B      BW      2008       165
+    #   HICKS_B      BE      2009       167
+    #   HICKS_B      BW      2009       167
+    #   HICKS_B      BE      2011       161
+    #   HICKS_B      BW      2011       161
+    #   HICKS_B      BE      2012       216
+    #   HICKS_B      BW      2012       216
+    #   HICKS_B      BE      2013       214
+    #   HICKS_B      BW      2013       214
+    #   HICKS_B      BE      2014       214
+    #   HICKS_B      BW      2014       214
+    #   SERF_IA      S2      2010       365
+    #   SERF_IA      S2      2009       301
+    #   STJOHNS      WN      2009       181
+    #   STJOHNS      WS      2009       181
+
 
 # Select predicted data ---------------------------------------------------
 
@@ -331,15 +353,23 @@ tile_flow_pred %>%
   filter(model_name == 'reg_model_weighted') %>%
   select(siteid, plotid, dwm, rep, year, date, rain, flow, flow_pred_trim) %>%
   # remove predictions for plot-years when the whole year was missing
-  mutate(flow_pred = case_when(siteid == "DEFI_M" & plotid == "East" & year == 2010 ~ NA_real_,
-                               siteid == "DPAC" & year == 2006 ~ flow,
-                               siteid == "DPAC" & year == 2017 & plotid %in% c("NW", "NE") ~ NA_real_,
-                               siteid == "HARDIN" & year == 2010 & plotid == "North" ~ flow,
-                               siteid == "HENRY" & year == 2010 ~ flow,
-                               siteid == "SERF_IA" & year == 2009 & plotid == "S2" ~ flow,
-                               siteid == "SERF_IA" & year == 2010 & plotid == "S2" ~ flow,
-                               siteid == "STJOHNS" & year == 2009 ~ flow,
-                               TRUE ~ flow_pred_trim)) %>%
+  left_join(tile_flow_number_of_missing_days %>%
+              filter(total_pred > 152), 
+            by = c('siteid', 'plotid', 'year')) %>%
+  mutate(flow_pred = ifelse(is.na(total_pred), flow_pred_trim, flow)) %>%
+  select(-total, -total_pred) %>%
+  # # THIS CODE BELOW REMOVES YEARS MANNUALLY
+  # # IT SHOULD BE REMOVED AFTER CONFIRMING ACCURACY OF ABOVE CODE
+  # mutate(flow_pred = case_when(siteid == "DEFI_M" & plotid == "East" & year == 2010 ~ NA_real_,
+  #                              siteid == "DPAC" & year == 2006 ~ flow,
+  #                              siteid == "DPAC" & year == 2017 & plotid %in% c("NW", "NE") ~ NA_real_,
+  #                              siteid == "HARDIN" & year == 2010 & plotid == "North" ~ flow,
+  #                              siteid == "HENRY" & year == 2010 ~ flow,
+  #                              siteid == "HICKS_B" & year %in% c(2008, 2009, 2011:2014) ~ flow,
+  #                              siteid == "SERF_IA" & year == 2009 & plotid == "S2" ~ flow,
+  #                              siteid == "SERF_IA" & year == 2010 & plotid == "S2" ~ flow,
+  #                              siteid == "STJOHNS" & year == 2009 ~ flow,
+  #                              TRUE ~ flow_pred_trim)) %>%
   # comment predicted values that were left after above filter
   mutate(comments = ifelse(is.na(flow) & !is.na(flow_pred), "predicted", "")) %>%
   # add zero flows with corresponding comments for SERF_SD and HICKS_B
@@ -349,7 +379,14 @@ tile_flow_pred %>%
          flow_pred = case_when(siteid == "SERF_SD" & month(date) %in% c(1:3) & is.na(flow_pred) ~ 0,
                                siteid == "HICKS_B" & month(date) %in% c(1:3) & is.na(flow) ~ 0, 
                                TRUE ~ flow_pred)) %>%
-  select(-flow_pred_trim) %>%
+  # comment predicted values at STEP3
+  left_join(read_csv("Data/tile_flow_fitted_STEP3.csv") %>% 
+              filter(!is.na(comments)) %>% 
+              select(siteid, plotid, date, comments) %>%
+              rename(comm = comments),
+            by = c('siteid', 'plotid', 'date')) %>%
+  mutate(comments = ifelse(!is.na(comm), comm, comments)) %>%
+  select(-flow_pred_trim, - comm) %>%
   ungroup() -> tile_flow_prediction
 
 
@@ -392,16 +429,7 @@ tile_flow_prediction %>%
   # add season
   mutate(season = factor(quarter(date), labels = c("Winter", "Spring", "Summer", "Fall"))) %>%
   arrange(siteid, plotid, date) %>%
-  select(siteid, plotid, dwm, rep, year, season, date, flow_pred, comments) %>% 
-  # CORRECTIONS (added in 2019-02-14)
-  # fix erroneous predictions at SERF_IA
-  mutate(flow_pred = ifelse(siteid == 'SERF_IA' & plotid == 'S4' & year == 2017 & 
-                              month(date) == 8 & comments == 'predicted', 0, flow_pred),
-         comments = ifelse(siteid == 'SERF_IA' & plotid == 'S4' & year == 2017 & 
-                             month(date) == 8 & comments == 'predicted', 'corrected', comments)) %>%
-  # replace predictions at TIDE
-  mutate(flow_pred = ifelse(siteid == 'TIDE' & comments == 'predicted', 0, flow_pred),
-         comments = ifelse(siteid == 'TIDE' & comments == 'predicted', "", comments)) %T>%
+  select(siteid, plotid, dwm, rep, year, season, date, flow_pred, comments) %T>%
   write_csv(paste0("Output/Data/tile_flow_daily_filled_", Sys.Date(), ".csv")) %>%
   # add sites with complete data {MUDS2, STORY, TIDE, UBWC}
   full_join(read_csv("C:/Users/gio/OneDrive - Iowa State University/Projects/TD/Data/Data Requests/Matt Helmers/Control_Box_Outlet_MNGT/Data/tile_flow_daily_for_Lori_2018-11-27.csv") %>%
@@ -419,9 +447,10 @@ tile_flow_prediction %>%
                          TRUE                                        ~ rep)) %>%
   # add missing years from UBWC when both plots were in FD mode (Lori asked in 2019-01-14)
   bind_rows(tile_flow_ubwc_2005_2008) %>%
-  arrange(site, plot, date) %>%
-  write_csv(paste0("Output/Data/tile_flow_for_ANOVA_", Sys.Date(), ".csv"))
-
+  arrange(site, plot, date) %T>%
+  write_csv(paste0("Output/Data/tile_flow_for_ANOVA_", Sys.Date(), ".csv")) %>%
+  # save copy for N load calculations (2019-05-20)
+  write_csv(paste0("../../../Analysis/Synthesis Papers/Matt - Seasonal Pattern of N Loss/Input_Data/tile_flow_for_ANOVA_", Sys.Date(), ".csv"))
 
 
 
@@ -438,4 +467,6 @@ tile_flow_prediction %>%
 #  TIDE    << Use predictions from step 3
 
 
+# for Loads calculations see project in 
+# /OneDrive - Iowa State University/Projects/TD/Analysis/Synthesis Papers/Matt - Seasonal Pattern of N Loss
 

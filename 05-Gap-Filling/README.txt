@@ -45,7 +45,7 @@ Output for ANOVA
 Generated new weather file that included seasonal and annual precipitation data and corresponding wetness categories for water year 2017 for following sites: DPAC, HICKS_B, SERF_IA, SERF_SD. This calculations are done in different R project (\Projects\TD\Data\Data Requests\Matt Helmers\Control_Box_Outlet_MNGT\Control_Box_Outlet_MNGT.Rproj)
 
 
-20188-12-10
+2018-12-10
 -----------
 Improve Prediction Model
 Added threshold of 0.45 mm for rainfall. When on-site precipitation was below the threshold it was assumed that no rain occurred. Therefore no tile flow predictions were made on that date, but recession slope was estimated based on precious day's tile flow. This helped to address the problem of sharp drops when big precipitation in previous days was fallowed by tiny precipitation. Even those we used a 3-day moving average, these tiny precipitations still remained small, hence predicted tile flows were not adequate. Model could not overwrite those small drainage values with recession slope predictions, creating unusual drops (see DEFI_M in Jan 2008).
@@ -99,6 +99,47 @@ STJOHNS {2009-2011}
     2009 - predictions looks fine, but there are a lot of missing precipitation dates. 
     2010 - Good
     2011 - Only 4 missing values will at WS. There is a gap in summer than need to be filled with zero-flow. In total 17 days are missing in summer out of 92 (~ 18.5 %)
+
+
+2019-01-14
+----------
+Output for ANOVA
+Added years to UBWC when both plots were in free drainage mode.
+
+
+2019-02-14
+----------
+Output for ANOVA
+After reviewing model predictions with PIs, manually fixed erroneous predictions (made at SETP5) for following site-years:
+    SERF_IA {2018} at S4
+    TIDE {2007, 2009} at H3
+
+
+2019-02-19
+----------
+Output for ANOVA
+Adjusted rep numbers for plots at STORY to match with Lori's dataset.
+
+
+2019-05-17
+----------
+Update Input Data
+Precipitation data was updated for SERF_IA after discovering that wrong station was used for importing weather data from IEM's ISU Soil Moisture Network. 
+
+Tile flow data for HICKS_B was updated with the latest version received from Jeff and Andry. Years 2012-2015 were different from the earlier version, while the rest was the same. But, the updated data has only 2 or 3 months of flow for those years. 
+
+Modify Prediction Model
+Predictions made at STEP3 was incorporated in the new procedure. This eliminated a need to manually remove erroneous predictions at SERF_IA and TIDE (see comment on 2019-02-14), because those gaps were filled "accurately" at SETP3.
+
+Selections of predicted data was slightly modified. The maximum number of days allowed to predict flow was increased from 150 to 152 (5 months) in a calendar year. Hence, plot-years that have predictions made for 153 of more days were excluded from the final results. For northern sites (HICKS_B and SERF_SD), when counting predicted days 0-flow filling of winter months (Jan-Mar) is not taken into account.
+
+
+2019-05-20
+----------
+Update Input Data
+HICKS_B precipitation data from TRACY weather station (that was originally provided by Jeff/Andry) contained gaps. Complete weather data was downloaded using TD long-term weather tool for 2006-2018. Precision of the new data is lower (1/10 instead of 1/100), therefore only missing values were copied into the corresponding Google Sheet. It was also found that the average air temp was calculated as mean of daily high and low temp, which is not accurate and therefore removed from the sheet. 
+
+Parts of the gap-filling scripts (in STEP1, STEP3, and STEP5) were rerun to generate new data.
 
 
 

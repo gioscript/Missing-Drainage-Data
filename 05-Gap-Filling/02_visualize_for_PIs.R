@@ -33,7 +33,7 @@ for (i in seq_along(plot_count$siteid)) {
     geom_line(aes(y = flow_pred, colour = plotid), size = 0.8) +
     geom_point(aes(y = flow_pred, colour = plotid), size = 1) +
     geom_point(aes(y = pred, colour = plotid), size = 2) +
-    geom_point(data = . %>% filter(comments == "predicted"), 
+    geom_point(data = . %>% filter(str_detect(comments, "predicted")), 
                aes(y = -1), shape = 15, col = "green", size = 1.1) +
     facet_grid(year ~ .) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b", name = NULL) +
@@ -59,7 +59,7 @@ section_plot <- function(DATA = plot_tile_flow_data, SITE, YEAR,
     geom_point(aes(y = flow_pred, colour = plotid), size = 1.2) +
     geom_point(aes(y = pred, colour = plotid), size = 2.5) +
     geom_point(aes(y = pred), colour = "white", size = 1.2, alpha = 0.9) +
-    geom_point(data = . %>% filter(comments == "predicted"), 
+    geom_point(data = . %>% filter(str_detect(comments, "predicted")), 
                aes(y = GREEN_LINE), shape = 15, col = "green", size = 1.1) +
     facet_grid(plotid ~ .) +
     scale_x_date(date_breaks = "1 month", date_labels = "%b", name = NULL) +
@@ -128,7 +128,7 @@ filled_flow_data <- function(SITE) {
 # AUGLA -------------------------------------------------------------------
 # Fig 2 Tile Flow
 # predictions in 2008
-section_plot(SITE = "AUGLA", YEAR = 2008, RAIN_MULT = 5,
+section_plot(SITE = "AUGLA", YEAR = 2008, RAIN_MULT = 1,
              END = "0531")
 
 # Fig 3 Annual Tile Flow by Treatment
@@ -271,14 +271,25 @@ filled_flow_data(SITE = "DPAC")
 
 # HICKS_B -----------------------------------------------------------------
 # Fig 2 Tile Flow
-# predictions in 2012
-section_plot(SITE = "HICKS_B", YEAR = 2012, RAIN_MULT = 1,
-             START = "0315", END = "0615") 
-section_plot(SITE = "HICKS_B", YEAR = 2012, RAIN_MULT = 1,
-             START = "0801", END = "1025") 
-# predictions in 2014
-section_plot(SITE = "HICKS_B", YEAR = 2014, RAIN_MULT = 1,
-             START = "0901", END = "1201") 
+# predictions in 2006
+section_plot(SITE = "HICKS_B", YEAR = 2006, RAIN_MULT = 1,
+             START = "0101", END = "1231")
+# predictions in 2007
+section_plot(SITE = "HICKS_B", YEAR = 2007, RAIN_MULT = 1,
+             START = "0101", END = "1231")
+# predictions in 2010
+section_plot(SITE = "HICKS_B", YEAR = 2010, RAIN_MULT = 1,
+             START = "0101", END = "1231")
+
+
+# # predictions in 2012
+# section_plot(SITE = "HICKS_B", YEAR = 2012, RAIN_MULT = 1,
+#              START = "0315", END = "0615") 
+# section_plot(SITE = "HICKS_B", YEAR = 2012, RAIN_MULT = 1,
+#              START = "0801", END = "1025") 
+# # predictions in 2014
+# section_plot(SITE = "HICKS_B", YEAR = 2014, RAIN_MULT = 1,
+#              START = "0901", END = "1201") 
 # predictions in 2015
 section_plot(SITE = "HICKS_B", YEAR = 2015, RAIN_MULT = 1,
              START = "0601", END = "0915") 
@@ -365,7 +376,7 @@ filled_flow_data(SITE = "SERF_SD")
 # Fig 2 Tile Flow
 # predictions in 2007
 section_plot(SITE = "TIDE", YEAR = 2007, RAIN_MULT = 1,
-             START = "0615", END = "1015") 
+             START = "0615", END = "1015")
 # predictions in 2009
 section_plot(SITE = "TIDE", YEAR = 2009, RAIN_MULT = 1,
              START = "0315", END = "0715")

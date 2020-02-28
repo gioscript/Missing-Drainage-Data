@@ -499,7 +499,16 @@ read_csv("C:/Users/gio/OneDrive - Iowa State University/Projects/TD/Data/Data Re
   # get rid of missing data in the begining of MUDS2
   mutate(flow = ifelse(siteid %in% c("MUDS2", "STORY", "UBWC"), tile_flow_mm, flow_pred)) %>%
   # select variables to be used at 
-  select(site = siteid, plot = plotid, trt = dwm, rep, year, season, date, flow) %>%
+  select(site = siteid, plot = plotid, trt = dwm, rep, year, season, date, flow) %>% 
+  # # CORRECTIONS (added in 2019-02-14)
+  # # fix erroneous predictions at SERF_IA
+  # mutate(flow_pred = ifelse(siteid == 'SERF_IA' & plotid == 'S4' & year == 2017 & 
+  #                             month(date) == 8 & comments == 'predicted', 0, flow_pred),
+  #        comments = ifelse(siteid == 'SERF_IA' & plotid == 'S4' & year == 2017 & 
+  #                            month(date) == 8 & comments == 'predicted', 'corrected', comments)) %>%
+  # # replace predictions at TIDE
+  # mutate(flow_pred = ifelse(siteid == 'TIDE' & comments == 'predicted', 0, flow_pred),
+  #        comments = ifelse(siteid == 'TIDE' & comments == 'predicted', "", comments)) %>%
   # remove data partaining to water year 2018
   filter(year < 2017) %>%
   write_csv(paste0("Output/Data/tile_flow_for_ANOVA_", Sys.Date(), ".csv"))

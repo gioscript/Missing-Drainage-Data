@@ -56,4 +56,5 @@ recession_slope_plot +
                geom = "text", 
                position = position_dodge(width = 0.75)) +
   coord_cartesian(ylim = c(-4, 1.5))
-ggsave(filename = "Output/Figs/recession_slope_distribution_zoomed_with_additional_means.png", width = 12, height = 8)
+ggsave(filename = "Output/Figs/recession_slope_distribution_zoomed_with_additional_means.png", 
+       width = 12, height = 8)
