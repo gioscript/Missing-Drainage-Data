@@ -77,27 +77,3 @@ tile_flow_fitted <-
 
 
 
-# Save predicted data -----------------------------------------------------
-
-tile_flow_fitted %T>%
-  # as an output in the same folder for Step 3
-  write_csv(path = "Output/Data/tile_flow_fitted_STEP3.csv") %>%
-  # as an input in the folder for Step 5
-  write_csv(path = paste0(dirname(getwd()), "/05-Gap-Filling/Data/tile_flow_fitted_STEP3.csv"))
-
-
-  
-# Plot to preview predicted data ------------------------------------------
-
-tile_flow_fitted %>%
-  mutate(year = year(date),
-         date = update(date, year = 2012)) %>%
-  filter(siteid == "SERF_IA" & year == 2007) %>%
-  ggplot(aes(x = date, group = plotid)) +
-  geom_point(aes(y = flow_pred_step_3)) +
-  geom_point(aes(y = flow), colour = "orange") + 
-  facet_grid(plotid ~ .) #+
-  coord_cartesian(xlim = ymd(20121120, 20121231), ylim = c(0:2))
-
-
-
